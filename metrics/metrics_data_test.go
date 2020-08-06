@@ -8,6 +8,7 @@ import (
 	"net/http/httptest"
 	"time"
 
+	"github.com/nszilard/prometheus-custom-metrics/config"
 	_ "github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
@@ -43,22 +44,22 @@ func (h *handler) handleMetrics(w http.ResponseWriter, req *http.Request) {
 }
 
 func (h *handler) handleCounterEndpoint(w http.ResponseWriter, req *http.Request, endpoint string) {
-	IncrementEndpointAccessed(system, endpoint)
+	IncrementEndpointAccessed(config.System, endpoint)
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) handleError(w http.ResponseWriter, req *http.Request, endpoint string) {
-	IncrementApplicationError(system, endpoint, "404")
+	IncrementApplicationError(config.System, endpoint, http.StatusNotFound)
 	w.WriteHeader(http.StatusNotFound)
 }
 
 func (h *handler) handleGaugeEndpointInc(w http.ResponseWriter, req *http.Request, endpoint string) {
-	IncrementActiveDatabaseConnection(system)
+	IncrementActiveDatabaseConnection(config.System)
 	w.WriteHeader(http.StatusOK)
 }
 
 func (h *handler) handleGaugeEndpointDec(w http.ResponseWriter, req *http.Request, endpoint string) {
-	DecrementActiveDatabaseConnection(system)
+	DecrementActiveDatabaseConnection(config.System)
 	w.WriteHeader(http.StatusOK)
 }
 
@@ -72,13 +73,13 @@ func (h *handler) handleHistogramEndpoint(w http.ResponseWriter, req *http.Reque
 	}()
 
 	duration := time.Since(start)
-	ObserveResponseDuration(system, endpoint, duration.Seconds())
+	ObserveResponseDuration(config.System, endpoint, duration.Seconds())
 	w.WriteHeader(http.StatusOK)
 }
 
 // listen will start a test server listening to a local port.
 func getTestServer() (*httptest.Server, error) {
-	l, err := net.Listen("tcp", fmt.Sprintf("%v%v", testHost, testPort))
+	l, err := net.Listen("tcp", fmt.Sprintf("%v:%v", host, port))
 	if err != nil {
 		return nil, err
 	}

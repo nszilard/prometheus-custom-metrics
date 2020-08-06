@@ -1,9 +1,9 @@
 package metrics
 
 const (
-	// test server
-	testHost = "127.0.0.1"
-	testPort = ":9999"
+	// server
+	host = "127.0.0.1"
+	port = "9988"
 
 	// endpoints
 	home             = "/"
@@ -12,7 +12,4 @@ const (
 	add              = "/add-connection"
 	sub              = "/sub-connection"
 	responseDuration = "/response-duration"
-
-	// general
-	system = "example"
 )

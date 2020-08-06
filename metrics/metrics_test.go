@@ -7,6 +7,8 @@ import (
 	"net/http/httptest"
 	"testing"
 
+	"github.com/nszilard/prometheus-custom-metrics/config"
+
 	"github.com/stretchr/testify/assert"
 )
 
@@ -38,19 +40,19 @@ func TestCustomMetrics(t *testing.T) {
 			"endpoint_accessed": {
 				endpoint: home,
 				repeat:   18,
-				expected: []string{fmt.Sprintf("endpoint_accessed{endpoint=\"%v\",system=\"%v\"} %v", home, system, 18)},
+				expected: []string{fmt.Sprintf("endpoint_accessed{endpoint=\"%v\",system=\"%v\"} %v", home, config.System, 18)},
 			},
 			"application_error": {
 				endpoint: errorNotFound,
 				repeat:   15,
-				expected: []string{fmt.Sprintf("application_error{code=\"%s\",endpoint=\"%v\",system=\"%v\"} %v", "404", errorNotFound, system, 15)},
+				expected: []string{fmt.Sprintf("application_error{code=\"%s\",endpoint=\"%v\",system=\"%v\"} %v", "404", errorNotFound, config.System, 15)},
 			},
 		},
 		"Gauge": {
 			"active_database_connection": {
 				add:      8,
 				sub:      6,
-				expected: []string{fmt.Sprintf("active_database_connection{system=\"%v\"} %v", system, 2)},
+				expected: []string{fmt.Sprintf("active_database_connection{system=\"%v\"} %v", config.System, 2)},
 			},
 		},
 		"Histogram": {
@@ -58,16 +60,16 @@ func TestCustomMetrics(t *testing.T) {
 				endpoint: responseDuration,
 				repeat:   8,
 				expected: []string{
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.01"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.04"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.16"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.64"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="2.56"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="10.24"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="40.96"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="+Inf"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_sum{endpoint="%s",system="%s"}`, responseDuration, system),
-					fmt.Sprintf(`response_duration_seconds_count{endpoint="%s",system="%s"}`, responseDuration, system),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.01"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.04"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.16"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="0.64"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="2.56"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="10.24"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="40.96"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_bucket{endpoint="%s",system="%s",le="+Inf"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_sum{endpoint="%s",system="%s"}`, responseDuration, config.System),
+					fmt.Sprintf(`response_duration_seconds_count{endpoint="%s",system="%s"}`, responseDuration, config.System),
 				},
 			},
 		},
@@ -109,12 +111,12 @@ func TestCustomMetrics(t *testing.T) {
 
 func sendRequestToEndpoint(endpoint string, repeat int) {
 	for i := 0; i < repeat; i++ {
-		http.Get(fmt.Sprintf("http://%v%v%v", testHost, testPort, endpoint))
+		http.Get(fmt.Sprintf("http://%v:%v%v", host, port, endpoint))
 	}
 }
 
 func getMetrics(t *testing.T) string {
-	resp, err := http.Get(fmt.Sprintf("http://%v%v%v", testHost, testPort, metrics))
+	resp, err := http.Get(fmt.Sprintf("http://%v:%v%v", host, port, metrics))
 	if err != nil {
 		t.Fatalf("get metrics: unexpected error: %v", err)
 	}

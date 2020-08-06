@@ -7,6 +7,7 @@
 #--------------------------------------------------
 # Variables
 #--------------------------------------------------
+BINARY?="prometheus-custom-metrics"
 TEST?=$$(go list ./...)
 GO_FILES?=$$(find . -name '*.go')
 
@@ -17,6 +18,11 @@ bootstrap: ## Downloads and cleans up all dependencies
 	@go mod tidy
 	@go mod download
 
+fmt: ## Formats go files
+	@echo "==> Formatting files..."
+	@gofmt -w $(GO_FILES)
+	@echo ""
+
 check: ## Checks code for linting/construct errors
 	@echo "==> Checking if files are formatted..."
 	@gofmt -l $(GO_FILES)
@@ -25,17 +31,9 @@ check: ## Checks code for linting/construct errors
 	@go list -f '{{.Dir}}' ./... | xargs go vet;
 	@echo "    [✓]\n"
 
-package: clean bootstrap check test ## Packages the binary and runs all tests
-	@go build
-
-fmt: ## Formats go files
-	@echo "==> Formatting files..."
-	@gofmt -w $(GO_FILES)
-	@echo ""
-
 test: check ## Runs all tests
 	@echo "==> Running tests..."
-	@go test -tags='$(BUILD_TAGS)' $(TEST) $(TESTARGS) -parallel=20
+	@go test $(TEST) -parallel=20
 	@echo ""
 
 coverage: ## Runs code coverage
@@ -43,6 +41,14 @@ coverage: ## Runs code coverage
 
 show-coverage: coverage ## Shows code coverage report in your web browser
 	@go tool cover -html=.target/coverage.out
+
+dev: check ## Builds a local dev version
+	@go build
+
+package: clean bootstrap check test ## Packages the binary for release
+	@mkdir -p .target/bin
+	@env GOOS=linux GOARCH=amd64 go build -o .target/bin/${BINARY}
+	@docker build -t nszilard/prometheus-custom-metrics .
 
 .PHONY: bootstrap check package fmt test coverage show-coverage clean help
 

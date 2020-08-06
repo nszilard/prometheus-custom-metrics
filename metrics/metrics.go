@@ -1,6 +1,8 @@
 package metrics
 
 import (
+	"strconv"
+
 	"github.com/prometheus/client_golang/prometheus"
 )
 
@@ -14,11 +16,11 @@ var ApplicationError = prometheus.NewCounterVec(
 )
 
 // IncrementApplicationError increments the appropriate prometheus counter metric
-func IncrementApplicationError(system, endpoint, code string) {
+func IncrementApplicationError(system, endpoint string, code int) {
 	ApplicationError.With(prometheus.Labels{
 		"system":   system,
 		"endpoint": endpoint,
-		"code":     code,
+		"code":     strconv.Itoa(code),
 	}).Inc()
 }
 

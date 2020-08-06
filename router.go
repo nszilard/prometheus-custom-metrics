@@ -18,8 +18,6 @@ func (h *requestHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	switch req.Method {
 	case http.MethodGet:
 		h.handleGet(w, req)
-	default:
-		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
 }
 
@@ -41,8 +39,6 @@ func (h *requestHandler) handleGet(w http.ResponseWriter, req *http.Request) {
 		h.getConnectionSub(w, req, pathTerminateConnection)
 	case pathMetrics:
 		h.getMetrics(w, req)
-	default:
-		w.WriteHeader(http.StatusNotFound)
 	}
 }
 
@@ -83,10 +79,10 @@ func (*requestHandler) getConnectionSub(w http.ResponseWriter, req *http.Request
 func (*requestHandler) getError(w http.ResponseWriter, req *http.Request, endpoint string) {
 	metrics.IncrementEndpointAccessed(config.System, endpoint)
 
-	w.WriteHeader(http.StatusInternalServerError)
+	w.WriteHeader(http.StatusNotFound)
 	w.Write([]byte("Oh no, something went wrong"))
 
-	metrics.IncrementApplicationError(config.System, endpoint, "500")
+	metrics.IncrementApplicationError(config.System, endpoint, http.StatusNotFound)
 }
 
 func (*requestHandler) getRandom(w http.ResponseWriter, req *http.Request, endpoint string) {
@@ -95,7 +91,7 @@ func (*requestHandler) getRandom(w http.ResponseWriter, req *http.Request, endpo
 
 	out, err := random.Generate()
 	if err != nil {
-		metrics.IncrementApplicationError(config.System, endpoint, "500")
+		metrics.IncrementApplicationError(config.System, endpoint, http.StatusInternalServerError)
 		metrics.ObserveResponseDuration(config.System, endpoint, time.Since(start).Seconds())
 
 		w.WriteHeader(http.StatusInternalServerError)
