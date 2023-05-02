@@ -11,7 +11,7 @@ func Register() {
 	prometheus.DefaultRegisterer.MustRegister(EndpointAccessed)
 
 	// Gauges
-	prometheus.DefaultRegisterer.MustRegister(ActiveDatabaseConnection)
+	prometheus.DefaultRegisterer.MustRegister(RequestsInFlight)
 
 	// Histograms
 	prometheus.DefaultRegisterer.MustRegister(ResponseDuration)

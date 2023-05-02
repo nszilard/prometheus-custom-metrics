@@ -6,21 +6,26 @@ import (
 	"github.com/prometheus/client_golang/prometheus"
 )
 
+// -----------------------------------
+// Counters
+// -----------------------------------
+
 // ApplicationError metrics counts the number of errors the system has experienced
 var ApplicationError = prometheus.NewCounterVec(
 	prometheus.CounterOpts{
 		Name: "application_error",
 		Help: "Number of errors observed in the system.",
 	},
-	[]string{"system", "endpoint", "code"},
+	[]string{labelSystem, labelEndpoint, labelMethod, labelCode},
 )
 
 // IncrementApplicationError increments the appropriate prometheus counter metric
-func IncrementApplicationError(system, endpoint string, code int) {
+func IncrementApplicationError(system, endpoint, method string, code int) {
 	ApplicationError.With(prometheus.Labels{
-		"system":   system,
-		"endpoint": endpoint,
-		"code":     strconv.Itoa(code),
+		labelSystem:   system,
+		labelEndpoint: endpoint,
+		labelMethod:   method,
+		labelCode:     strconv.Itoa(code),
 	}).Inc()
 }
 
@@ -30,54 +35,63 @@ var EndpointAccessed = prometheus.NewCounterVec(
 		Name: "endpoint_accessed",
 		Help: "Number of times an endpoint was accessed.",
 	},
-	[]string{"system", "endpoint"},
+	[]string{labelSystem, labelEndpoint, labelMethod},
 )
 
 // IncrementEndpointAccessed increments the appropriate prometheus counter metric
-func IncrementEndpointAccessed(system, endpoint string) {
+func IncrementEndpointAccessed(system, endpoint, method string) {
 	EndpointAccessed.With(prometheus.Labels{
-		"system":   system,
-		"endpoint": endpoint,
+		labelSystem:   system,
+		labelEndpoint: endpoint,
+		labelMethod:   method,
 	}).Inc()
 }
 
-// ActiveDatabaseConnection stores the active database connections at any given time
-var ActiveDatabaseConnection = prometheus.NewGaugeVec(
+// -----------------------------------
+// Gauges
+// -----------------------------------
+
+// RequestsInFlight stores the number of concurrent in-flight requests
+var RequestsInFlight = prometheus.NewGaugeVec(
 	prometheus.GaugeOpts{
-		Name: "active_database_connection",
-		Help: "Number of active database connections currently in the system.",
+		Name: "requests_inflight",
+		Help: "The number of inflight requests being handled at the same time.",
 	},
-	[]string{"system"},
+	[]string{labelSystem},
 )
 
-// IncrementActiveDatabaseConnection increments the appropriate prometheus gauge metric
-func IncrementActiveDatabaseConnection(system string) {
-	ActiveDatabaseConnection.With(prometheus.Labels{
-		"system": system,
+// IncrementInflightRequests increments the appropriate prometheus gauge metric
+func IncrementInflightRequests(system string) {
+	RequestsInFlight.With(prometheus.Labels{
+		labelSystem: system,
 	}).Inc()
 }
 
-// DecrementActiveDatabaseConnection decrements the appropriate prometheus gauge metric
-func DecrementActiveDatabaseConnection(system string) {
-	ActiveDatabaseConnection.With(prometheus.Labels{
-		"system": system,
+// DecrementInflightRequests decrements the appropriate prometheus gauge metric
+func DecrementInflightRequests(system string) {
+	RequestsInFlight.With(prometheus.Labels{
+		labelSystem: system,
 	}).Dec()
 }
+
+// -----------------------------------
+// Histograms
+// -----------------------------------
 
 // ResponseDuration stores the observed response durations in seconds
 var ResponseDuration = prometheus.NewHistogramVec(
 	prometheus.HistogramOpts{
 		Name:    "response_duration_seconds",
-		Help:    "Response distribution for the system in seconds.",
-		Buckets: prometheus.ExponentialBuckets(0.01, 4, 7),
+		Help:    "Response duration distribution in seconds.",
+		Buckets: []float64{.005, .01, .025, .05, .1, .25, .5, 1, 1.5, 2},
 	},
-	[]string{"system", "endpoint"},
+	[]string{labelSystem, labelEndpoint},
 )
 
 // ObserveResponseDuration stores the duration in the appropriate bucket for the prometheus histogram metric
 func ObserveResponseDuration(system, endpoint string, duration float64) {
 	ResponseDuration.With(prometheus.Labels{
-		"system":   system,
-		"endpoint": endpoint,
+		labelSystem:   system,
+		labelEndpoint: endpoint,
 	}).Observe(duration)
 }

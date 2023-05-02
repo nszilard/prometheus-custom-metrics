@@ -1,0 +1,77 @@
+basePath: /
+info:
+  contact: {}
+  description: API documentation for the 'Prometheus Custom Metrics' application.
+  title: Prometheus Custom Metrics
+  version: "1.0"
+paths:
+  /alive:
+    get:
+      description: Responds to the Kubernetes alive requests
+      operationId: alive
+      produces:
+      - text/text
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Kubernetes Alive probe
+      tags:
+      - Common
+  /metrics:
+    get:
+      description: Metrics is an http.Handler instance to expose Prometheus metrics
+        via HTTP.
+      operationId: metrics
+      responses:
+        "200":
+          description: OK
+      summary: Prometheus Metrics
+      tags:
+      - Common
+  /ready:
+    get:
+      description: Responds to the Kubernetes ready requests
+      operationId: ready
+      produces:
+      - text/text
+      responses:
+        "200":
+          description: OK
+          schema:
+            type: string
+      summary: Kubernetes Ready probe
+      tags:
+      - Common
+  /v1/delay:
+    get:
+      produces:
+      - text/text
+      responses:
+        "200":
+          description: OK
+      summary: Responds with a 200 HTTP status code but with a random delay
+      tags:
+      - v1
+  /v1/error:
+    get:
+      responses:
+        "500":
+          description: Oh no, something went wrong!
+          schema:
+            type: string
+      summary: Responds with a 500 HTTP status code
+      tags:
+      - v1
+  /v1/ok:
+    get:
+      produces:
+      - text/text
+      responses:
+        "200":
+          description: OK
+      summary: Responds with a 200 HTTP status code
+      tags:
+      - v1
+swagger: "2.0"

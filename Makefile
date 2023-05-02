@@ -8,55 +8,47 @@
 # Variables
 #--------------------------------------------------
 BINARY?="prometheus-custom-metrics"
-TEST?=$$(go list ./...)
 GO_FILES?=$$(find . -name '*.go')
+TEST?=$$(go list ./... | grep -v /vendor/)
 
 #--------------------------------------------------
 # Targets
 #--------------------------------------------------
+.PHONY: bootstrap
 bootstrap: ## Downloads and cleans up all dependencies
 	@go mod tidy
 	@go mod download
+	@go install -mod=mod github.com/swaggo/swag/cmd/swag
 
+.PHONY: fmt
 fmt: ## Formats go files
 	@echo "==> Formatting files..."
-	@gofmt -w $(GO_FILES)
+	@gofmt -w -s $(GO_FILES)
 	@echo ""
 
+.PHONY: check
 check: ## Checks code for linting/construct errors
-	@echo "==> Checking if files are formatted..."
+	@echo "==> Checking if files are well formatted..."
 	@gofmt -l $(GO_FILES)
-	@echo "    [✓]\n"
+	@echo ""
 	@echo "==> Checking if files pass go vet..."
 	@go list -f '{{.Dir}}' ./... | xargs go vet;
-	@echo "    [✓]\n"
-
-test: check ## Runs all tests
-	@echo "==> Running tests..."
-	@go test $(TEST) -parallel=20
 	@echo ""
 
-coverage: ## Runs code coverage
-	@go test $(TEST) -race -coverprofile=.target/coverage.out -covermode=atomic
+.PHONY: docs
+docs: ## Genereates Swagger documentation
+	@echo "==> Generating Swagger documentation..."
+	@swag init --parseInternal
 
-show-coverage: coverage ## Shows code coverage report in your web browser
-	@go tool cover -html=.target/coverage.out
+.PHONY: dev
+dev: fmt check docs ## Builds a local dev version
+	@go build -o ${BINARY}
 
-dev: check ## Builds a local dev version
-	@go build
-
-package: clean bootstrap check test ## Packages the binary for release
-	@mkdir -p .target/bin
-	@env GOOS=linux GOARCH=amd64 go build -o .target/bin/${BINARY}
-	@docker build -t nszilard/prometheus-custom-metrics .
-
-.PHONY: bootstrap check package fmt test coverage show-coverage clean help
-
+.PHONY: clean
 clean: ## Cleans up temporary and compiled files
 	@echo "==> Cleaning up ..."
-	@rm -rf .target/*
-	@echo "    [✓]"
+	@rm -f ${BINARY}
 	@echo ""
 
-help: ## Shows available targets
-	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-13s\033[0m %s\n", $$1, $$2}'
+help:
+	@fgrep -h "## " $(MAKEFILE_LIST) | fgrep -v fgrep | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-9s\033[0m %s\n", $$1, $$2}'
