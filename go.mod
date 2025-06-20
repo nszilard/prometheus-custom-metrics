@@ -1,9 +1,9 @@
 module github.com/nszilard/prometheus-custom-metrics
 
-go 1.20
+go 1.23.0
 
 require (
-	github.com/go-chi/chi/v5 v5.0.8
+	github.com/go-chi/chi/v5 v5.2.2
 	github.com/nszilard/log v1.0.0
 	github.com/prometheus/client_golang v1.15.0
 	github.com/swaggo/http-swagger v1.3.4
